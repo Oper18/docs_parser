@@ -1,0 +1,48 @@
+services:
+  docs_parser_typesense:
+    image: typesense/typesense:28.0
+    restart: always
+    container_name: docs_parser_typesense
+    environment:
+      - TYPESENSE_API_KEY=${TYPESENSE_API_KEY}
+    networks:
+      - docs_parser-network
+    volumes:
+      - ${TYPESENSE_DATA}:/data
+    command: --data-dir /data --api-key=$TYPESENSE_API_KEY --enable-cors
+
+  docs_parser_investigate_task:
+    image: docs_parser:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: docs_parser_investigate_task
+    environment:
+      - TYPESENSE_API_KEY=${TYPESENSE_API_KEY}
+      - TYPESENSE_HOST=docs_parser_typesense
+      - GOOGLE_SERVICE_ACCOUNT_FILE=${GOOGLE_SERVICE_ACCOUNT_FILE}
+    networks:
+      - docs_parser-network
+    command: sh -c 'python run_task.py --task=investigate'
+
+  docs_parser_upload_task:
+    image: docs_parser:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: docs_parser_upload_task
+    environment:
+      - TYPESENSE_API_KEY=${TYPESENSE_API_KEY}
+      - TYPESENSE_HOST=docs_parser_typesense
+      - GOOGLE_SERVICE_ACCOUNT_FILE=${GOOGLE_SERVICE_ACCOUNT_FILE}
+    networks:
+      - docs_parser-network
+    command: sh -c 'python run_task.py --task=upload'
+
+networks:
+  verum-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 19.39.1.0/24
