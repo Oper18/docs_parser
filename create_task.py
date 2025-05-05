@@ -21,7 +21,7 @@ async def main():
         }
     )
     task = UploadTaskModel(
-        lang="eng",
+        lang=sys.argv[2],
         file_path=sys.argv[1],
         project_name="test_project",
         provider="google",
