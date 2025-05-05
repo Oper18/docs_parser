@@ -1,3 +1,4 @@
+import sys
 import asyncio
 
 from core.settings import settings
@@ -21,7 +22,7 @@ async def main():
     )
     task = UploadTaskModel(
         lang="eng",
-        file_path="1qgafiouIZFZiiSH0NrpH_vWAIfx4S1ZA",
+        file_path=sys.argv[1],
         project_name="test_project",
         provider="google",
         task_type=UploadTaskType.investigate,
