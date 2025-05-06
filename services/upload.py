@@ -93,7 +93,7 @@ class FileUploader:
             return
         task.status = UploadTaskStatus.pending
         await (
-            self.client.collections[task.project_name]
+            self.client.collections["tasks"]
             .documents[task_id]
             .aupdate(task.model_dump(mode="json"))
         )
