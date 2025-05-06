@@ -1,6 +1,8 @@
 import sys
 import asyncio
 
+from typesense.exceptions import ObjectAlreadyExists
+
 from core.settings import settings
 from lib.typesense.client import AsyncClient
 from db.typesense.models import UploadTaskModel, UploadTaskType
@@ -23,11 +25,15 @@ async def main():
     task = UploadTaskModel(
         lang=sys.argv[2],
         file_path=sys.argv[1],
-        project_name="test_project",
+        project_name="kgb_project",
         provider="google",
         task_type=UploadTaskType.investigate,
     )
     await client.collections["tasks"].documents.acreate(task.model_dump(mode="json"))
+    try:
+        await client.create_collection("kgb_project", UploadTaskModel)
+    except ObjectAlreadyExists:
+        pass
 
 
 if __name__ == "__main__":
