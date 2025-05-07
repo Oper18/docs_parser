@@ -10,7 +10,7 @@ from lib.converter.base import BaseConverter
 
 
 class BasePdfConverter(BaseConverter):
-    _chunk_size = 50
+    _chunk_size = 20
 
     def __init__(
         self, client: AsyncClient, project_name: str, file_path: str, *args, **kwargs
