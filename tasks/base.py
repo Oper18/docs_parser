@@ -67,7 +67,7 @@ class BaseTaskRunner:
             task_obj = UploadTaskModel.model_validate(task)
         except Exception as e:
             logger.error(
-                f"{self.__class__.__name__}, Failed model validation for task {task["id"]}: {e}"
+                f"{self.__class__.__name__}, Failed model validation for task {task['id']}: {e}"
             )
             await self._mark_task_failed(task)
             return
@@ -84,7 +84,14 @@ class BaseTaskRunner:
                 )
                 await self._mark_task_failed(task)
                 return
-            await method(task["id"], task_obj)
+            try:
+                await method(task["id"], task_obj)
+            except Exception as e:
+                logger.error(
+                    f"{self.__class__.__name__}, Failed process task {task['id']}: {e}"
+                )
+                await self._mark_task_failed(task)
+                return
 
     async def run(self):
         try:
