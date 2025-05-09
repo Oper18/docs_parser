@@ -60,7 +60,7 @@ class BaseTaskRunner:
 
     async def _mark_task_failed(self, task: dict):
         task["status"] = UploadTaskStatus.failed
-        await self.client.collections["tasks"].documents[task["id"]].update(task)
+        await self.client.collections["tasks"].documents[task["id"]].aupdate(task)
 
     async def process_task(self, task: dict):
         try:
