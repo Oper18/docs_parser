@@ -5,7 +5,7 @@ from typesense.exceptions import ObjectAlreadyExists
 
 from core.settings import settings
 from lib.typesense.client import AsyncClient
-from db.typesense.models import UploadTaskModel, UploadTaskType
+from db.typesense.models import UploadTaskModel, UploadTaskType, BookPageModel
 
 
 async def main():
@@ -31,7 +31,7 @@ async def main():
     )
     await client.collections["tasks"].documents.acreate(task.model_dump(mode="json"))
     try:
-        await client.create_collection("kgb_project", UploadTaskModel)
+        await client.create_collection("kgb_project", BookPageModel)
     except ObjectAlreadyExists:
         pass
 
