@@ -14,7 +14,7 @@ class GoogleSettings(BaseSettings):
 
 
 class Settings(TypesenseSettings, GoogleSettings):
-    pass
+    api_token: str = "dev_token"
 
 
 @lru_cache

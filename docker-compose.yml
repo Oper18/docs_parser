@@ -39,6 +39,23 @@ services:
       - docs_parser-network
     command: sh -c 'python run_task.py --task=upload'
 
+  docs_parser_backend:
+    image: docs_parser:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: docs_parser_backend
+    environment:
+      - TYPESENSE_API_KEY=${TYPESENSE_API_KEY}
+      - TYPESENSE_HOST=docs_parser_typesense
+      - GOOGLE_SERVICE_ACCOUNT_FILE=${GOOGLE_SERVICE_ACCOUNT_FILE}
+      - API_TOKEN=${API_TOKEN}
+    networks:
+      - docs_parser-network
+    ports:
+      - 8082:8000
+    command: fastapi run
+
 networks:
   docs_parser-network:
     driver: bridge
