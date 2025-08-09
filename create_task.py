@@ -6,7 +6,7 @@ from typesense.exceptions import ObjectAlreadyExists
 from core.settings import settings
 from lib.typesense.client import AsyncClient
 from db.typesense.models import UploadTaskModel, UploadTaskType, BookPageModel
-from service.upload import FileUploader
+from services.upload import FileUploader
 
 
 async def main():
