@@ -6,6 +6,7 @@ from typesense.exceptions import ObjectAlreadyExists
 from core.settings import settings
 from lib.typesense.client import AsyncClient
 from db.typesense.models import UploadTaskModel, UploadTaskType, BookPageModel
+from service.upload import FileUploader
 
 
 async def main():
@@ -22,14 +23,8 @@ async def main():
             "connection_timeout_seconds": 10,
         }
     )
-    task = UploadTaskModel(
-        lang=sys.argv[2],
-        file_path=sys.argv[1],
-        project_name="kgb_project",
-        provider="google",
-        task_type=UploadTaskType.investigate,
-    )
-    await client.collections["tasks"].documents.acreate(task.model_dump(mode="json"))
+    service = FileUploader(client, "kgb_project")
+    await service.create_investigate_task(sys.argv[1], sys.argv[2], "google")
     try:
         await client.create_collection("kgb_project", BookPageModel)
     except ObjectAlreadyExists:

@@ -12,7 +12,7 @@ router = APIRouter(prefix="/search", tags=["search"])
 
 
 @router.post(r"", responses={200: {"model": List[BookPageResponse]}})
-async def send_message_handler(
+async def search_text_handler(
     request: Request,
     data: BookPageSearchRequest,
     search_service_obj: TextSearch = Depends(search_service),

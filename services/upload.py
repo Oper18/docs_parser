@@ -1,5 +1,5 @@
 import asyncio
-from typing import IO, List, Tuple
+from typing import IO, List, Optional, Tuple
 import io
 import logging
 from google.oauth2 import service_account
@@ -112,6 +112,16 @@ class FileUploader:
         )
         logger.info(f"Update task {task_id} status to {task.status}")
 
+    def _check_upload_task_exists(self, file_path: str, project_name: str) -> bool:
+        query_params = {
+            "q": "*",
+            "query_by": "file_path",
+            "filter_by": f"file_path:{file_path} && status:[{UploadTaskStatus.waiting.value},{UploadTaskStatus.pending.value},{UploadTaskStatus.success.value}]",
+            "limit": 1,
+        }
+        res = self.client.collections[project_name].documents.search(query_params)
+        return len(res["hits"]) > 0
+
     def _sync_google_list_folder(
         self, folder_id: str, task: UploadTaskModel, folder_name: str = ""
     ) -> List[UploadTaskModel]:
@@ -132,7 +142,11 @@ class FileUploader:
             .execute()
         )
         for item in results.get("files", []):
-            if item["mimeType"].split(".")[-1] != "folder":
+            if item["mimeType"].split(".")[
+                -1
+            ] != "folder" and not self._check_upload_task_exists(
+                item["id"], task.project_name
+            ):
                 tasks.append(
                     UploadTaskModel(
                         lang=task.lang,
@@ -177,4 +191,45 @@ class FileUploader:
             self.client.collections["tasks"]
             .documents[task_id]
             .aupdate(task.model_dump(mode="json"))
+        )
+
+    async def get_tasks(
+        self,
+        task_type: UploadTaskType,
+        status: Optional[UploadTaskStatus] = None,
+        page: int = 1,
+        per_page: int = 10,
+    ) -> List[UploadTaskModel]:
+        query_params = {
+            "q": "*",
+            "query_by": "task_type",
+            "filter_by": f"task_type:{task_type.value}",
+            "page": page,
+            "per_page": per_page,
+        }
+        if status:
+            query_params["filter_by"] += f" && status:{status.value}"
+        res = await self.client.collections["tasks"].documents.asearch(query_params)
+        return [UploadTaskModel.model_validate(hit["document"]) for hit in res["hits"]]
+
+    def _google_build_task_model(self, file_path: str, lang: str) -> UploadTaskModel:
+        if "http" in file_path:
+            file_path = file_path.split("/")[-1]
+        return UploadTaskModel(
+            lang=lang,
+            file_path=file_path,
+            project_name=self.project_name,
+            provider="google",
+            task_type=UploadTaskType.investigate,
+        )
+
+    async def create_investigate_task(
+        self, file_path: str, lang: str, provider: str
+    ) -> UploadTaskModel:
+        method = getattr(self, f"_{provider}_build_task_model", None)
+        if not method:
+            raise ValueError(f"Unsupported provider: {provider}")
+        task = method(file_path, lang)
+        await self.client.collections["tasks"].documents.acreate(
+            task.model_dump(mode="json")
         )
